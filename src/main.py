@@ -1,4 +1,5 @@
-import os, glob
+import os
+import glob
 from collections import namedtuple
 
 from typing import List
@@ -27,7 +28,7 @@ def process(text, width):
                 if total_score - line_score < final_solution.total_score:
                     final_solution = Solution(total_score - line_score, 0, line_width, i, solution.line, solution)
                 temp.append(new_solution)
-            if solution.total_score == best_solution.total_score:
+            if solution == best_solution:
                 line_score = (width - s) ** 2
                 total_score = solution.total_score + line_score
                 new_solution = Solution(total_score, line_score, s, i, solution.line + 1, solution)
@@ -46,21 +47,29 @@ def process(text, width):
         tmp = tmp.parent
 
     output = '\n'.join(' '.join(line) for line in result)
-    return solution.total_score, output
+    return solution.total_score, output, sum(map(len, dynamic))
 
 
 def main():
     if not os.path.exists('output'):
         os.mkdir('output')
+
+    pattern = "%70s%5s%10s%5s%15s%5s%15s"
+    separator = "|"
+    print(pattern % ("File", separator, "M", separator, "Score", separator, "Steps"))
+    print("_" * 125)
     for path in glob.glob(os.path.join('resources', '*.txt')):
         with open(path, encoding='utf-8') as file:
             text = file.read()
 
-        score, result = process(text, 78)
-        print(path, score)
+        for M in range(75, 82):
+            score, result, steps = process(text, M)
+            print(pattern % (path, separator, M, separator, score, separator, steps))
 
-        with open(os.path.join('output', os.path.basename(path)), 'w', encoding='utf-8') as output:
-            output.write(result)
+            if not os.path.exists(os.path.join("output", str(M))):
+                os.mkdir(os.path.join("output", str(M)))
+            with open(os.path.join('output', str(M), os.path.basename(path)), 'w', encoding='utf-8') as output:
+                output.write(result)
 
 
 if __name__ == '__main__':
